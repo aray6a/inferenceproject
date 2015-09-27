@@ -118,7 +118,7 @@ cfunc <- function(x, n) { (x -5) * sqrt(n) / 5}
 totalSims <- totalSims %>% mutate( a = cfunc(means, simulations))
 totalSims$simulations <- factor(totalSims$simulations)
 
-ggplot( totalSims, aes( x = a, fill = simulations) ) + geom_histogram( aes( y = ..density..) ) +  facet_grid(. ~ simulations) ++ ggtitle("Simulations")
+ggplot( totalSims, aes( x = a, fill = simulations) ) + geom_histogram( aes( y = ..density..) ) +  facet_grid(. ~ simulations) + ggtitle("Simulations")
 ```
 
 
