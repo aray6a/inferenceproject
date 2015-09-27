@@ -1,0 +1,127 @@
+---
+title: "Central Limit Theorem Simulations"
+author: "Alim Ray"
+date: "9/26/2015"
+output:
+  html_document: default
+---
+
+#Overview
+This report explores the Cental Limit Theorem by running simulations using the exponential distribution.  The sample means of the simulations
+are plotted and shown to fix the normal distribution.
+
+
+#Simulation
+
+Below is code that runs the exponential distribution 1,000 times.  Cumulative means for the 1,00 simulations are plotted and shown to converge
+to the theorectical mean 1/\lambda where \lambda = 0.2.
+
+
+```{r}
+library(ggplot2)
+
+simulations <- function( nosim = 1000 ) {
+  n <- 40
+	lambda <- 0.2
+	mns <- c()
+  vrs <- c()
+	for (i in 1 : nosim) {
+		sim <- rexp(n, lambda)
+		mns <- c( mns, mean(sim) )
+		vrs <- c( vrs, var(sim) )
+  }
+  list( mns, vrs )
+}
+
+simulationGraphs <- function(nosim = 1000) {
+  simulationValues <- simulations( nosim )
+  mns <- simulationValues[[1]]
+  vrs <- simulationValues[[2]]
+	#Means plot
+	plotdata <- cumsum(mns)/1:nosim
+	meansGraph <- ggplot( data.frame( x = 1:nosim, y = plotdata), aes (x = x, y = y) ) + geom_line() + geom_hline(yintercept = 5) + ggtitle( "Cumulative Means Simulations")
+
+	#Variance plot
+  varGraph <- ggplot( data.frame( v = vrs), aes ( x = v ) ) + geom_histogram() + geom_vline(xintercept = 25, aes( colour = "red")) + ggtitle( "Variance Histogram")
+
+	list( meansGraph, varGraph, mns, vrs )
+}
+```
+
+#Sample mean vs. Theoretical mean
+
+The Central Limit Theorem (CLT) states that sample means follow a normal distribution. Therefore, since we know
+the exponential distribution has a mean of $$\frac {1}{\lambda}$$.  The theoretical mean for this simulation is $$\frac {1} {0.2}$$ or 5.
+There is a horizontal line at 5 on the simulation graph representing the theoretical mean.  The graph shows, as we
+increase the number of simulations, the closer we get to the theoretical mean.
+
+Below is the graph returned by the code above.
+
+```{r, echo=F, fig.width=9, fig.height = 6, fig.align='center'}
+graphs <- simulationGraphs()
+mnsg <- graphs[[1]]
+vrsg <- graphs[[2]]
+mnsg
+```
+
+
+#Sample variance vs. Theoretical variance
+The theoretical standard deviation is also 1/lambda so the theorectical variance (1/0.2)^2 or 25.  The variance histogram (below) of
+the 1000 simulations is centered around 25.
+
+
+
+
+```{r, echo=F, fig.width=9, fig.height = 6, fig.align='center'}
+vrsg
+```
+
+
+#Distritbution
+
+The CLT states that the formula
+
+$$\frac{\bar X_n - \mu}{\sigma / \sqrt{n}}$$
+
+is normal.  Using 5 as the theoretical mean and 5 as the theoretical standard deviation, we will run n simulations, subtract 5 and divide by 5/\sqrt{n}.
+
+We will do this for 1,000, 5,000, and 10,000 simulations and plot the results.  Each graph fits a normal distribution.
+
+
+```{r, echo=F, fig.width=9, fig.height = 6, fig.align='center'}
+library(dplyr)
+
+nosims1 <- 1000
+nosims2 <- 5000
+nosims3 <- 10000
+
+returnedVals <- simulations(nosims1)
+mns1 <- returnedVals[[1]]
+mns1 <- c(mns1, rep(nosims1, nosims1) )
+mns1 <- matrix(mns1, nrow = nosims1, ncol = 2)
+
+returnedVals <- simulations(nosims2)
+mns2 <- returnedVals[[1]]
+mns2 <- c(mns2, rep(nosims2, nosims2) )
+mns2 <- matrix(mns2, nrow = nosims2, ncol = 2)
+
+returnedVals <- simulations(nosims3)
+mns3 <- returnedVals[[1]]
+mns3 <- c(mns3, rep(nosims3, nosims3) )
+mns3 <- matrix(mns3, nrow = nosims3, ncol = 2)
+
+function(x, n) { (x -5) * sqrt(n) / 5}
+totalSims <- data.frame( rbind( mns1, mns2, mns3) )
+names(totalSims) <- c('means', 'simulations')
+
+cfunc <- function(x, n) { (x -5) * sqrt(n) / 5}
+totalSims <- totalSims %>% mutate( a = cfunc(means, simulations))
+totalSims$simulations <- factor(totalSims$simulations)
+
+ggplot( totalSims, aes( x = a, fill = simulations) ) + geom_histogram( aes( y = ..density..) ) +  facet_grid(. ~ simulations) ++ ggtitle("Simulations")
+```
+
+
+
+#Conclusion
+The graphs in this report demonstrate the CLT applies to the sample means for the exponental distribution.

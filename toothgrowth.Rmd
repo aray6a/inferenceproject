@@ -1,0 +1,50 @@
+---
+title:  Tooth Growth T-Test Comparison
+author:  Alim Ray
+date: 9/27/2015
+---
+
+#Overview
+Use the ToothGrowth data set, compare the lengths of guinea pigs' teeth by delivery
+method and by dosage.
+
+#Inital Exploratory Analysis
+There are two delivery methods and 3 dosage levels of vitamins that were given to the
+guinea pigs.  The average tooth lengths are given below.
+
+
+```{r, echo = F}
+library(dplyr)
+library(ggplot2)
+data(ToothGrowth)
+ToothGrowthMeans <- ToothGrowth %>% group_by( supp) %>% summarize( totals = sum( n() ), lenMean = mean(len) )
+ToothGrowthMeans
+```
+
+The following plot shows that increase dosage levels might cause an increase in tooth length.  It's unclear if delivery methods had an effect.
+
+```{r, echo = F}
+ToothGrowth$supp <- ifelse( ToothGrowth$supp == 'OJ', 1, 2)
+ToothGrowth$supp = factor( ToothGrowth$supp, levels = c( 1, 2), labels = c('Orange Juice', 'Ascorbic Acid') )
+ggplot( ToothGrowth, aes( x = len, fill = supp) ) + geom_histogram() + facet_grid( dose ~ supp) + ggtitle("Delivery Method by Dosage")
+```
+
+#T-Tests
+A non-paired t-test was performed on the two delivery methods.  Since the delivery methods were used on two different sets of pigs, the test should be unpaired.  Since zero is in the confidence interval, we cannot attribute any differences in tooth length to the delivery methods.
+
+
+```{r, echo=F}
+oj <- ToothGrowth %>% filter( supp == 'Orange Juice' )
+vc <- ToothGrowth %>% filter( supp == 'Ascorbic Acid' )
+t.test(oj$len, vc$len, paired = F)
+```
+
+A non-paired t-test was performed on the lowest dosage level group and the highest
+dosage level group.  Since zero is not in the confidence interval, we can attribute some of the differences in tooth length to the dosage level.
+
+
+```{r, echo = F}
+lowdose <- ToothGrowth %>% filter( dose == 0.5)
+highdose <- ToothGrowth %>% filter( dose == 2)
+t.test( lowdose$len, highdose$len, paired = F)
+```
